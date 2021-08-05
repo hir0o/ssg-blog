@@ -3,5 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "author": "hir0o <mk.9.q.kyu@gmail.com>",
-  "license": "MIT"
+  "license": "MIT",
+  "scripts": {
+	  "dev": "ts-node index.ts"
+  }
 }
