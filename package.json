@@ -12,6 +12,7 @@
     "@types/yargs": "^17.0.2"
   },
   "dependencies": {
-    "yargs": "^17.1.0"
+    "yargs": "^17.1.0",
+    "zenn-markdown-html": "^0.1.94"
   }
 }
