@@ -1,7 +1,7 @@
 import { readdir, readFile, writeFile } from 'fs/promises'
 import yargs from 'yargs'
 import path from 'path'
-// import markdownHtml from 'zenn-markdown-html'
+import markdownHtml from 'zenn-markdown-html'
 
 type MetadataType = {
   title: string
@@ -48,7 +48,7 @@ const main = async () => {
       )
       return {
         meta: { ...getMetaData(post), fileName },
-        constn: getContent(post),
+        content: getContent(post),
       }
     })
   )
@@ -56,11 +56,13 @@ const main = async () => {
   // index.htmlを作成
   // テンプレート取得
   const indexTemplate = await readFile(
-    path.resolve(__dirname, '../doc/template/index.html'),
+    path.join(__dirname, '/template/index.html'),
     'utf-8'
   )
   const postListDom = posts.map((post) => {
-    return `<li><a href="${post.meta.fileName}">${post.meta.title}</a></li>`
+    return `<li><a href="./posts/${post.meta.fileName.replace('md', 'html')}">${
+      post.meta.title
+    }</a></li>`
   })
   // contentsをhtmlに変換
   const indexHtml = indexTemplate
@@ -71,6 +73,23 @@ const main = async () => {
   await writeFile(path.resolve(__dirname, '../dist/index.html'), indexHtml)
 
   // posts/${id}.htmlを作成
+  const postTemplate = await readFile(
+    path.join(__dirname, '/template/posts.html'),
+    'utf-8'
+  )
+  posts.forEach(async (post) => {
+    const contentHtml = markdownHtml(post.content)
+    const postHtml = postTemplate
+      .replace('{title}', post.meta.title)
+      .replace('{body}', contentHtml)
+    await writeFile(
+      path.resolve(
+        __dirname,
+        `../dist/posts/${post.meta.fileName.replace('.md', '')}.html`
+      ),
+      postHtml
+    )
+  })
 }
 
 ;(async () => {
