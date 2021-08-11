@@ -3,6 +3,8 @@ import yargs from 'yargs'
 import path from 'path'
 import markdownHtml from 'zenn-markdown-html'
 
+import { Index } from './template/index'
+
 type MetadataType = {
   title: string
   date: string
@@ -70,7 +72,10 @@ const main = async () => {
     .replace('{body}', `<ul>${postListDom.join('')}</ul>`)
 
   // index.htmlを書き込み
-  await writeFile(path.resolve(__dirname, '../dist/index.html'), indexHtml)
+  await writeFile(
+    path.resolve(__dirname, '../dist/index.html'),
+    Index({ title: '投稿一覧', children: `<ul>${postListDom}</ul>` })
+  )
 
   // posts/${id}.htmlを作成
   const postTemplate = await readFile(
