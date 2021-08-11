@@ -1,51 +1,23 @@
 import { readdir, readFile, writeFile } from 'fs/promises'
 import yargs from 'yargs'
-import path from 'path'
 import markdownHtml from 'zenn-markdown-html'
+import { getFullPath } from './lib/path'
+import { getMetaData, getContent } from './lib/post'
 
 import { Index } from './template/index'
-
-type MetadataType = {
-  title: string
-  date: string
-  fileName: string
-  // description: string
-  // iconPath: string
-}
-
-function getContent(markdown: string): string {
-  const match = /---\r?\n([\s\S]+?)\r?\n---/.exec(markdown)
-  if (!match) return ''
-  const content = markdown.slice(match[0].length)
-  return content
-}
-
-function getMetaData(markdown: string): MetadataType {
-  const match = /---\r?\n([\s\S]+?)\r?\n---/.exec(markdown)
-  if (!match) return {} as MetadataType
-  const frontMatter = match[1]
-  const metadata = {} as MetadataType
-  frontMatter.split('\n').forEach((pair) => {
-    const colonIndex = pair.indexOf(':')
-    metadata[pair.slice(0, colonIndex).trim() as keyof MetadataType] = pair
-      .slice(colonIndex + 1)
-      .trim()
-  })
-  return metadata
-}
 
 const main = async () => {
   // argsを読み取り
   const args = yargs(process.argv)
   // postsのファイルパス一覧取得
   // TODO: エラーハンドリング
-  const postNames = await readdir(path.resolve(__dirname, '../doc/posts'))
+  const postNames = await readdir(getFullPath('../doc/posts/'))
 
   // postsの内容を取得
   const posts = await Promise.all(
     postNames.map(async (fileName) => {
       const post = await readFile(
-        path.resolve(__dirname, '../doc/posts', fileName),
+        getFullPath('../doc/posts', fileName),
         'utf-8'
       )
       return {
@@ -58,7 +30,7 @@ const main = async () => {
   // index.htmlを作成
   // テンプレート取得
   const indexTemplate = await readFile(
-    path.join(__dirname, '/template/index.html'),
+    getFullPath('./template/index.html'),
     'utf-8'
   )
   const postListDom = posts.map((post) => {
@@ -73,13 +45,13 @@ const main = async () => {
 
   // index.htmlを書き込み
   await writeFile(
-    path.resolve(__dirname, '../dist/index.html'),
+    getFullPath('../dist/index.html'),
     Index({ title: '投稿一覧', children: `<ul>${postListDom}</ul>` })
   )
 
   // posts/${id}.htmlを作成
   const postTemplate = await readFile(
-    path.join(__dirname, '/template/posts.html'),
+    getFullPath('./template/posts.html'),
     'utf-8'
   )
   posts.forEach(async (post) => {
@@ -88,8 +60,7 @@ const main = async () => {
       .replace('{title}', post.meta.title)
       .replace('{body}', contentHtml)
     await writeFile(
-      path.resolve(
-        __dirname,
+      getFullPath(
         `../dist/posts/${post.meta.fileName.replace('.md', '')}.html`
       ),
       postHtml
@@ -98,5 +69,9 @@ const main = async () => {
 }
 
 ;(async () => {
-  await main()
+  try {
+    await main()
+  } catch (e) {
+    console.error(e)
+  }
 })()
