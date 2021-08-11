@@ -3,7 +3,7 @@ import yargs from 'yargs'
 import markdownHtml from 'zenn-markdown-html'
 import { getFullPath } from './lib/path'
 import { getMetaData, getContent } from './lib/post'
-
+import { Post } from './types'
 import { Index } from './template/index'
 
 const main = async () => {
@@ -14,39 +14,23 @@ const main = async () => {
   const postNames = await readdir(getFullPath('../doc/posts/'))
 
   // postsの内容を取得
-  const posts = await Promise.all(
+  const posts: Post[] = await Promise.all(
     postNames.map(async (fileName) => {
       const post = await readFile(
         getFullPath('../doc/posts', fileName),
         'utf-8'
       )
       return {
-        meta: { ...getMetaData(post), fileName },
+        meta: { ...getMetaData(post), id: fileName.replace('.md', '') },
         content: getContent(post),
       }
     })
   )
 
-  // index.htmlを作成
-  // テンプレート取得
-  const indexTemplate = await readFile(
-    getFullPath('./template/index.html'),
-    'utf-8'
-  )
-  const postListDom = posts.map((post) => {
-    return `<li><a href="./posts/${post.meta.fileName.replace('md', 'html')}">${
-      post.meta.title
-    }</a></li>`
-  })
-  // contentsをhtmlに変換
-  const indexHtml = indexTemplate
-    .replace('{title}', '投稿一覧')
-    .replace('{body}', `<ul>${postListDom.join('')}</ul>`)
-
   // index.htmlを書き込み
   await writeFile(
     getFullPath('../dist/index.html'),
-    Index({ title: '投稿一覧', children: `<ul>${postListDom}</ul>` })
+    Index({ title: '投稿一覧', posts })
   )
 
   // posts/${id}.htmlを作成
@@ -54,17 +38,14 @@ const main = async () => {
     getFullPath('./template/posts.html'),
     'utf-8'
   )
+
+  // TODO: posts/ がなかったら作成する
   posts.forEach(async (post) => {
     const contentHtml = markdownHtml(post.content)
     const postHtml = postTemplate
       .replace('{title}', post.meta.title)
       .replace('{body}', contentHtml)
-    await writeFile(
-      getFullPath(
-        `../dist/posts/${post.meta.fileName.replace('.md', '')}.html`
-      ),
-      postHtml
-    )
+    await writeFile(getFullPath(`../dist/posts/${post.meta.id}.html`), postHtml)
   })
 }
 

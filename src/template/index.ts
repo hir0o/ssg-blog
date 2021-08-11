@@ -1,16 +1,22 @@
+import { PostListItem } from './postListItem'
 import { Layout } from './layout'
+import { Post } from '../types'
 
 type Props = {
   title: string
-  children: string
+  posts: Post[]
 }
 
-export const Index = ({ title, children }: Props) => {
+export const Index = ({ title, posts }: Props) => {
   return `
     ${Layout({
       children: `
         <h1>${title}</h1>
-        <main>${children}</main>
+        <main>
+            <ul>
+                ${posts.map((post) => PostListItem({ post })).join('')}
+            </ul>
+        </main>
     `,
     })}
     `
