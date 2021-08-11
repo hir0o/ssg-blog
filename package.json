@@ -5,6 +5,13 @@
   "author": "hir0o <mk.9.q.kyu@gmail.com>",
   "license": "MIT",
   "scripts": {
-	  "dev": "ts-node index.ts"
+    "dev": "ts-node src/index.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^16.4.12",
+    "@types/yargs": "^17.0.2"
+  },
+  "dependencies": {
+    "yargs": "^17.1.0"
   }
 }
